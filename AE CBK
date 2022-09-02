@@ -1,0 +1,211 @@
+# Corey Verkouteren
+# 9/2/22 - ?
+# practicing code
+
+import pygame as pg
+import pygame.freetype
+import random as rd
+from os import walk
+from pygame.locals import *
+
+pg.init()
+pg.freetype.init()
+
+
+class Player(pg.sprite.Sprite):
+    def __init__(self, location):
+        super(Player, self).__init__()
+        self.surf = pg.Surface((50, 50))
+        self.rect = self.surf.get_rect(center=(location))
+        self.surf.fill(gray)
+        # movement
+        self.xmovement = 0
+        self.ymovement = 0
+        # jump
+        self.jumpspeed = 0
+        self.jumptime = 0
+        self.jump = False
+        self.jumppower = 20
+        # gravity
+        self.gravity = 0
+        # counters
+        self.gravcounter = 0
+
+    def update(self, keypress):
+        # resets
+        self.xmovement = 0
+        self.ymovement = 0
+        # counts
+        self.gravcounter += 1
+        # player input
+        if keypress[K_w]:
+            if not self.jump:
+                self.jump = True
+        if keypress[K_a]:
+            self.xmovement -= 5
+        if keypress[K_d]:
+            self.xmovement += 5
+        # abilities
+        # jump
+        if self.jump:
+            self.gravcounter = 0
+            if self.jumptime == 0:
+                self.jumpspeed = self.jumppower
+            self.jumptime += 1
+            self.ymovement -= self.jumpspeed
+            self.jumpspeed = self.jumpspeed/1.1
+            if self.jumpspeed < 1:
+                self.jumpspeed = 0
+                self.jump = False
+                self.jumptime = 0
+        # gravity
+        if not self.jump:
+            self.gravity = self.gravcounter*.3
+            self.ymovement += self.gravity
+
+        # final movements
+        self.rect.move_ip(self.xmovement, self.ymovement)
+
+
+class RedEnemy(pg.sprite.Sprite()):
+  def __init__(self, position):
+    super(RedEnemy, self).__init__()
+    self.surf = pg.Surface(50, 50)
+    self.rect = self.surf.get_rect(center=location)
+    self.surf.fill(red)
+    # movement
+    self.xmovement = 0
+    self.ymovement = 0
+    self.direction = 0
+    # jump
+    self.jumpspeed = 0
+    self.jumptime = 0
+    self.jump = False
+    self.jumppower = 20
+    # gravity
+    self.gravity = 0
+    # counters
+    self.gravcounter = 0
+    
+  def update(self):
+    # resets
+    self.xmovement = 0
+    self.ymovement = 0
+    # abilities
+        # jump
+        if self.jump:
+            self.gravcounter = 0
+            if self.jumptime == 0:
+                self.jumpspeed = self.jumppower
+            self.jumptime += 1
+            self.ymovement -= self.jumpspeed
+            self.jumpspeed = self.jumpspeed/1.1
+            if self.jumpspeed < 1:
+                self.jumpspeed = 0
+                self.jump = False
+                self.jumptime = 0
+        # gravity
+        if not self.jump:
+            self.gravity = self.gravcounter*.3
+            self.ymovement += self.gravity
+
+        # final movements
+        self.rect.move_ip(self.xmovement, self.ymovement)
+        
+  def Jumpa(self):
+    self.jump = True
+    
+  def Shoot(self):
+    print("shot")
+    orig = self.rect.center
+    if self.direction == 0:
+      dir = -1
+    elif self.direction == 1:
+      dir = 1
+    else:
+      print("error")
+    shot = SimpleProjectile(orig, dir)
+    projlist.add(shot)
+    
+
+class SimpleProjectile(pg.sprite.Sprite())
+  def __init__(self, location, direction):
+    super(SimpleProjectile, self).__init__()
+    self.surf = pg.Surface(20, 5)
+    self.rect = self.surf.get_rect(center=location)
+    self.surf.fill(yellow)
+    # movement
+    self.xmovement = 0
+    self.ymovement = 0
+    # stats
+    self.speed = 2
+    self.direction = direction
+    
+  def update(self):
+    self.rect.move_ip((self.speed*direction), 0)
+
+
+# essentials
+SCREEN_WIDTH = 1200
+SCREEN_HEIGHT = 600
+running = True
+
+clock = pg.time.Clock()
+screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pg.display.set_caption("Untitled Game")
+
+# colors
+red = (200, 20, 20)
+yellow = (200, 150, 150)
+gray = (100, 100, 100)
+
+# spawning
+player = Player((50, SCREEN_HEIGHT/2))
+testenemy = RedEnemy((SCREEN_WIDTH - 50, SCREEN_HEIGHT/2))
+
+# lists
+enemylist = pg.sprite.Group()
+enemylist.add(testenemy)
+projlist = pg.sprite.Group()
+
+# backgrounds
+backgroundnum = 0
+backgrounds = [pg.transform.scale(pg.image.load("Assets/backgrounds/space1.jfif"), (SCREEN_WIDTH, SCREEN_HEIGHT))]
+
+while running:
+    for event in pg.event.get():
+        if event.type == pg.QUIT:
+                running = False
+        if event.type == KEYDOWN:
+            if event.key == K_ESCAPE:
+                running = False
+    pressed_keys = pg.key.get_pressed()
+    # enemy ai
+    for enemy in enemylist:
+      if enemy.rect.bottom < SCREEN_HEIGHT - 50
+        enemy.Jumpa()
+      if enemy.rect.centery + 10 < player.rect.centery:
+        enemy.Jumpa()
+      if enemy.rect.centerx < player.rect.centerx:
+        enemy.rect.move_ip(3, 0)
+      elif enemy.rect.centerx > player.rect.centerx:
+        enemy.rect.move_ip(-3, 0)
+      if (abs(enemy.rect.centery) - abs(player.rect.centery))/10 < 10:
+        enemy.Shoot()
+    # updates
+    player.update(pressed_keys)
+    for enemy in enemylist:
+      enemy.update()
+    for p in projlist:
+      p.update()
+    # collisions
+    
+    # blits
+    screen.blit(backgrounds[backgroundnum], (0, 0))
+    for enemy in enemylist:
+      screen.blit(enemy.surf, enemy.rect)
+    for p in projlist:
+      screen.blit(p.surf, p.rect)
+    screen.blit(player.surf, player.rect)
+    pg.display.flip()
+    clock.tick(60)
